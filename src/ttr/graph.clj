@@ -1,18 +1,14 @@
 ;; graph.clj
 ;; AndrewJ 2020-05-02
 
-;;-------------------------------
 (ns ttr.graph
   (:gen-class)
-  (:require [csv-map.core :as csv]
-            [ubergraph.core :as uber]
+  (:require [ubergraph.core :as uber]
             [ubergraph.alg :as alg]))
 
-(defn read-map
-  "Read the map from a CSV file"
-  [map-file]
-  (csv/parse-csv (slurp map-file) :key :keyword))
+;;-------------------------------
 
+;; create-route :: Map k v -> Map k v
 (defn- create-route
   "Transform a route into a graph edge."
   [route]
@@ -24,12 +20,14 @@
     :tunnel (if (= "TRUE" (:istunnel route)) 1 0)
     :taken 0}])
 
+;; create-graph :: String -> Graph
 (defn create-graph
-  "Create a TTR graph from a map of the map."
+  "Create a TTR graph from a map of edges."
   [map-data]
   (let [g (uber/multigraph)]
     (uber/add-edges* g (map create-route map-data))))
 
+;; best-path :: Graph -> String -> String -> Path
 (defn best-path
   "Find the shortest path using a weighted edge score."
   [g start end]

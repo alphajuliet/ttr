@@ -3,13 +3,7 @@
 
 (ns ttr.core
   (:gen-class)
-  (:require [ttr.graph]))
-
-; Set up graph
-(def g
-  (->> "data/ttr-europe.csv"
-       (read-map)
-       (create-graph)))
+  (:require [ttr.state :refer :all]))
 
 (defn -main
   "Nothing, yet."
