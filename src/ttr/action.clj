@@ -16,18 +16,6 @@
   [n]
   (max 0 (dec n)))
 
-(defn hash-sum
-  "Sum the values of the numeric hash."
-  [h]
-  (apply + (vals h)))
-
-(defn hash-enumerate
-  "For each pair [k v] in a numeric hash, add v copies of k, and concatenate into a single list."
-  [h]
-  (reduce-kv
-   (fn [m k v]
-     (into m (repeat v k))) [] h))
-
 (defn random-card
   "Select a random card from a pile."
   [pile]
@@ -74,5 +62,20 @@
       (update-in [:table card] dec)
       (update-in [:player player :cards card] inc)
       (deal-table)))
+
+;;-------------------------------
+(defn get-available-routes
+  "Returns all routes in each direction as a sequence of vectors."
+  [state]
+  (get-routes (:map state) {:claimed-by nil}))
+
+;;-------------------------------
+(defn claim-route
+  "Claim a route on the map. A route is specified as a map with a :src, :dest and :colour"
+  [route player state]
+  [:pre [(contains? route :src)
+         (contains? route :dest)
+         (contains? route :colour)]]
+  (assoc state :map (claim-edge (:map state) route player)))
 
 ;; The End)

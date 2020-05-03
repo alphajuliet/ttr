@@ -23,4 +23,11 @@
       (is (= 1 (get-in s2 [:player 0 :cards c])))
       (is (= 5 (hash-sum (:table s2)))))))
 
+(deftest test-claim
+  (testing "Claim a route on the map for player 1"
+    (let [s0 (empty-state 2)
+          e  {:src "Paris" :dest "Bruxelles" :colour :red}
+          s1 (claim-route e 1 s0)]
+      (is (= 200 (count (get-available-routes s1)))))))
+
 ;; The End

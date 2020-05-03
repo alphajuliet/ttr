@@ -7,21 +7,19 @@
             [csv-map.core :as csv]))
 
 ;;-------------------------------
+;; Utilities
 
-;; Route :: Map k v
-;; read-map :: String -> List Route
-(defn read-map
-  "Read the map from a CSV file"
-  [map-file]
-  (csv/parse-csv (slurp map-file) :key :keyword))
+(defn hash-sum
+  "Sum the values of the numeric hash."
+  [h]
+  (apply + (vals h)))
 
-;; Map graph
-;; initial-map :: Graph
-(defn initial-map
-  []
-  (->> "data/ttr-europe-map.csv"
-       (read-map)
-       (create-graph)))
+(defn hash-enumerate
+  "For each pair [k v] in a numeric hash, add v copies of k, and concatenate into a single list."
+  [h]
+  (reduce-kv
+   (fn [m k v]
+     (into m (repeat v k))) [] h))
 
 ;; Ticket :: Map k v
 ;; read-tickets :: String -> List Ticket
