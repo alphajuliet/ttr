@@ -28,20 +28,19 @@
    (fn [m k v]
      (into m (repeat v k))) [] h))
 
-(defn random-car
-  "Select a random card from the deck."
-  [state]
-  (->> (:deck state)
+(defn random-card
+  "Select a random card from a pile."
+  [pile]
+  (->> pile
        (hash-enumerate)
        (r/rand-nth)))
 
 ;;-------------------------------
-
 ;; deal-car :: State -> State
 (defn- deal-car
   "Deal a single car card from the deck to the table."
   [st]
-  (let [c (random-car st)]
+  (let [c (random-card (:deck st))]
     (-> st
         (update-in [:deck c] dec-to-0)
         (update-in [:table c] inc))))
@@ -64,4 +63,16 @@
         (recur)
         s))))
 
-;; The End
+;;-------------------------------
+(defn take-card
+  "A player takes a card from the table into their hand, and deal another card to the table. There is no limit to the number of hand cards."
+  [player card state]
+  ; Assert that the card is available
+  {:pre (>= (get-in state [:table card]) 1)}
+
+  (-> state
+      (update-in [:table card] dec)
+      (update-in [:player player :cards card] inc)
+      (deal-table)))
+
+;; The End)
