@@ -16,8 +16,9 @@
   (csv/parse-csv (slurp map-file) :key :keyword))
 
 ;; Map graph
-;; g0 :: Graph
-(def g0
+;; initial-map :: Graph
+(defn initial-map
+  []
   (->> "data/ttr-europe-map.csv"
        (read-map)
        (create-graph)))
@@ -31,25 +32,20 @@
   ([tickets-file]
    (csv/parse-csv (slurp tickets-file) :key :keyword)))
 
-;; Colour :: Union (List Keyword)
-;; all-train-cards :: Map Colour Integer
-(def all-train-cards
-  {:white 12
-   :red 12
-   :orange 12
-   :blue 12
-   :green 12
-   :black 12
-   :pink 12
-   :yellow 12
-   :loco 14})
+;; Colours :: Union (List Keyword)
+(def colours [:white :red :orange :blue :green :black :pink :yellow :loco])
+
+;; all-train-cards :: Map Colours Integer
+(defn zero-train-cards [] (zipmap colours (repeat 9 0)))
+(defn all-train-cards [] (zipmap colours [12 12 12 12 12 12 12 12 14]))
 
 ;; State :: Map k v
 ;; init-state :: State
-(defn init-state
-  "Define a state:
+(defn empty-state
+  "Define the empty state:
    - Map
    - Deck
+   - Table
    - Player `n`
      - Train cars
      - Train cards
@@ -58,13 +54,22 @@
   [nplayers]
   {:pre [(>= nplayers 2)]}
   
-  {:map g0
-   :deck all-train-cards
+  {:map (initial-map)
+   :deck (all-train-cards)
+   :table (zero-train-cards)
    :tickets (read-tickets)
-   :player (vec (repeat nplayers  {:cars []
-                                   :cards []
+   :player (vec (repeat nplayers  {:cars 45
+                                   :cards (zero-train-cards)
                                    :tickets []
                                    :score 0}))})
 
+(defn pprint-state
+  "Pretty print the state."
+  [s]
+  (println "Deck:" (reduce + 0 (vals (:deck s))))
+  (println "Table:" (:table s))
+  (println "Tickets:" (count (:tickets s)))
+  (println "Players:") 
+  (map #(println %) (:player s)))
 
 ;; The End
