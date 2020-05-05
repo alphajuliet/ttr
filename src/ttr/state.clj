@@ -4,7 +4,8 @@
 (ns ttr.state
   (:gen-class)
   (:require [ttr.graph :refer :all]
-            [csv-map.core :as csv]))
+            [csv-map.core :as csv]
+            [clojure.spec.alpha :as s]))
 
 ;;-------------------------------
 ;; Utilities
@@ -22,23 +23,37 @@
      (into m (repeat v k))) [] h))
 
 ;; Ticket :: Map k v
+(s/def ::ticket (s/keys :req [string? string? int?]))
+(s/def ::tickets (s/coll-of ::ticket))
+
 ;; read-tickets :: String -> List Ticket
 (defn read-tickets
-  "Read tickets from a CSV file."
+  "Read tickets from a CSV file, and convert points to an int."
   ([]
    (read-tickets "data/ttr-europe-tickets.csv"))
-  ([tickets-file]
-   (csv/parse-csv (slurp tickets-file) :key :keyword)))
 
-;; Colours :: Union (List Keyword)
+  ([tickets-file]
+   {:post (s/valid? ::tickets %)}
+   (as-> tickets-file <>
+     (slurp <>)
+     (csv/parse-csv <> :key :keyword)
+     (map (fn [e] (update e :points #(Integer. %))) <>))))
+
+(s/def ::colour #{:white :red :orange :blue :green :black :pink :yellow :loco})
 (def colours [:white :red :orange :blue :green :black :pink :yellow :loco])
 
-;; all-train-cards :: Map Colours Integer
-(defn zero-train-cards [] (zipmap colours (repeat 9 0)))
-(defn all-train-cards [] (zipmap colours [12 12 12 12 12 12 12 12 14]))
+(s/def ::cards (s/map-of ::colour int?))
+(def zero-train-cards (zipmap colours (repeat 9 0)))
+(def all-train-cards (zipmap colours [12 12 12 12 12 12 12 12 14]))
 
 ;; State :: Map k v
 ;; init-state :: State
+(s/def ::graph (s/keys))
+(s/def ::cars int?)
+(s/def ::score int?)
+(s/def ::player (s/keys :req-un [::cars ::cards ::tickets ::score]))
+(s/def ::state (s/keys :req-un [::graph ::cards ::cards ::tickets (s/coll-of ::player)]))
+
 (defn empty-state
   "Define the empty state:
    - Map
@@ -51,15 +66,15 @@
      - Score"
   [nplayers]
   {:pre [(>= nplayers 2)]}
-  
+
   {:map (initial-map)
-   :deck (all-train-cards)
-   :table (zero-train-cards)
+   :deck all-train-cards
+   :table zero-train-cards
    :tickets (read-tickets)
-   :player (vec (repeat nplayers  {:cars 45
-                                   :cards (zero-train-cards)
-                                   :tickets []
-                                   :score 0}))})
+   :player (vec (repeat nplayers {:cars 45
+                                  :cards zero-train-cards
+                                  :tickets []
+                                  :score 0}))})
 
 (defn pprint-state
   "Pretty print the state."
@@ -67,7 +82,7 @@
   (println "Deck:" (reduce + 0 (vals (:deck s))))
   (println "Table:" (:table s))
   (println "Tickets:" (count (:tickets s)))
-  (println "Players:") 
+  (println "Players:")
   (map #(println %) (:player s)))
 
 ;; The End
