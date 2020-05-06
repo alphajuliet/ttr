@@ -48,11 +48,14 @@
 
 ;; State :: Map k v
 ;; init-state :: State
-(s/def ::graph (s/keys))
 (s/def ::cars int?)
 (s/def ::score int?)
-(s/def ::player (s/keys :req-un [::cars ::cards ::tickets ::score]))
-(s/def ::state (s/keys :req-un [::graph ::cards ::cards ::tickets (s/coll-of ::player)]))
+(s/def ::plyr (s/keys :req-un [::cars ::cards ::tickets ::score]))
+
+(s/def ::map (s/keys))
+(s/def ::deck ::cards)
+(s/def ::player (s/coll-of ::plyr))
+(s/def ::state (s/keys :req-un [::map ::deck ::cards ::tickets ::player]))
 
 (defn empty-state
   "Define the empty state:
@@ -69,7 +72,7 @@
 
   {:map (initial-map)
    :deck all-train-cards
-   :table zero-train-cards
+   :cards zero-train-cards
    :tickets (read-tickets)
    :player (vec (repeat nplayers {:cars 45
                                   :cards zero-train-cards
@@ -79,6 +82,7 @@
 (defn pprint-state
   "Pretty print the state."
   [s]
+  {:pre (s/valid? ::state s)}
   (println "Deck:" (reduce + 0 (vals (:deck s))))
   (println "Table:" (:table s))
   (println "Tickets:" (count (:tickets s)))
