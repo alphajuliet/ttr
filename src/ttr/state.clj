@@ -3,7 +3,7 @@
 
 (ns ttr.state
   (:gen-class)
-  (:require [ttr.graph :refer :all]
+  (:require [ttr.graph :as gr]
             [csv-map.core :as csv]
             [clojure.spec.alpha :as s]))
 
@@ -70,7 +70,7 @@
   [nplayers]
   {:pre [(>= nplayers 2)]}
 
-  {:map (initial-map)
+  {:map (gr/initial-map)
    :deck all-train-cards
    :cards zero-train-cards
    :tickets (read-tickets)
@@ -84,7 +84,7 @@
   [s]
   {:pre (s/valid? ::state s)}
   (println "Deck:" (reduce + 0 (vals (:deck s))))
-  (println "Table:" (:table s))
+  (println "Cards:" (:cards s))
   (println "Tickets:" (count (:tickets s)))
   (println "Players:")
   (map #(println %) (:player s)))

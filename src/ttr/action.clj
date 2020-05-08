@@ -3,9 +3,9 @@
 
 (ns ttr.action
   (:gen-class)
-  (:require [ttr.state :refer :all]
-            [ttr.graph :refer :all]
-            [csv-map.core :as csv]
+  (:require [ttr.state :as st ]
+            [ttr.graph :as gr]
+            #_[csv-map.core :as csv]
             [random-seed.core :as r]))
 
 ;;-------------------------------
@@ -20,7 +20,7 @@
   "Select a random card from a pile."
   [pile]
   (->> pile
-       (hash-enumerate)
+       (st/hash-enumerate)
        (r/rand-nth)))
 
 ;;-------------------------------
@@ -31,12 +31,12 @@
   (let [c (random-card (:deck st))]
     (-> st
         (update-in [:deck c] dec-to-0)
-        (update-in [:table c] inc))))
+        (update-in [:cards c] inc))))
 
 (defn- deal-to-5
   "Deal up to five cards to the table."
   [st _]
-  (if (< (hash-sum (:table st)) 5)
+  (if (< (st/hash-sum (:cards st)) 5)
     (deal-car st)
     ;else
     (reduced st)))
@@ -47,7 +47,7 @@
   [state]
   (loop []
     (let [s (reduce deal-to-5 state (range 5))]
-      (if (>= (get-in s [:table :loco]) 3)
+      (if (>= (get-in s [:cards :loco]) 3)
         (recur)
         s))))
 
@@ -56,10 +56,10 @@
   "A player takes a card from the table into their hand, and deal another card to the table. There is no limit to the number of hand cards."
   [player card state]
   ; Assert that the card is available
-  {:pre (>= (get-in state [:table card]) 1)}
+  {:pre (>= (get-in state [:cards card]) 1)}
 
   (-> state
-      (update-in [:table card] dec)
+      (update-in [:cards card] dec)
       (update-in [:player player :cards card] inc)
       (deal-table)))
 
@@ -67,7 +67,7 @@
 (defn get-available-routes
   "Returns all routes in each direction as a sequence of vectors."
   [state]
-  (get-routes (:map state) {:claimed-by nil}))
+  (gr/get-routes (:map state) {:claimed-by nil}))
 
 ;;-------------------------------
 (defn claim-route
@@ -76,6 +76,6 @@
   [:pre [(contains? route :src)
          (contains? route :dest)
          (contains? route :colour)]]
-  (assoc state :map (claim-edge (:map state) route player)))
+  (assoc state :map (gr/claim-edge (:map state) route player)))
 
 ;; The End)
