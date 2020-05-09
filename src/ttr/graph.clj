@@ -19,6 +19,7 @@
 ;; Definitions
 (s/def ::edge-attrs (s/keys :req-un [::length ::colour ::locos ::tunnel ::claimed-by]) )
 (s/def ::route (s/cat :src string? :dest string? :attrs ::edge-attrs))
+(s/def ::routes (s/coll-of ::route))
 (s/def ::graph (s/keys :req-un [::node-map ::allow-parallel? ::undirected? ::attrs ::cached-hash]))
 
 ;; create-edge :: Map k v -> Route
@@ -57,28 +58,36 @@
 
 ;;-------------------------------
 (defn get-all-routes
+  "Get all routes in the graph"
   [g]
   {:pre (s/valid? ::graph g)}
   (map (partial uber/edge-with-attrs g)
        (uber/edges g)))
 
 (defn get-routes
+  "Get all routes that match the query"
   [g condition]
   (map (partial uber/edge-with-attrs g)
        (uber/find-edges g condition)))
+
+(defn- edge->query
+  "Convert an edge to a query for find-edge"
+  [e]
+  {:src (first e) :dest (second e) :colour (:colour (last e))})
 
 ; claimed? :: Graph -> Edge -> Boolean
 (defn claimed?
   [g e]
   (as-> e <>
-    (uber/find-edge g <>)
+    (uber/find-edge g (edge->query <>))
     (uber/attr g <> :claimed-by)))
 
 ; take-edge :: Graph -> Edge -> Player -> Graph
-(defn claim-edge
+(defn claim-route
   "Indicate an edge is taken by a player. This overwrites the existing value."
-  [g route player]
-  (let [e (uber/find-edge g route)]
+  [g edge player]
+  {:pre (s/valid? ::edge edge)}
+  (let [e (uber/find-edge g (last edge))]
     (uber/add-attr g e :claimed-by player)))
 
 ;;-------------------------------
