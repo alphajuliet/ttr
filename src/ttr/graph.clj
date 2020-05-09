@@ -5,7 +5,8 @@
   (:gen-class)
   (:require [ubergraph.core :as uber]
             [ubergraph.alg :as alg]
-            [csv-map.core :as csv]))
+            [csv-map.core :as csv]
+            [clojure.spec.alpha :as s]))
 
 ;;-------------------------------
 ;; Utilities
@@ -15,8 +16,13 @@
   (if b 1 0))
 
 ;;-------------------------------
-;; create-route :: Map k v -> Map k v
-(defn- create-route
+;; Definitions
+(s/def ::edge-attrs (s/keys :req-un [::length ::colour ::locos ::tunnel ::claimed-by]) )
+(s/def ::route (s/cat :src string? :dest string? :attrs ::edge-attrs))
+(s/def ::graph (s/keys :req-un [::node-map ::allow-parallel? ::undirected? ::attrs ::cached-hash]))
+
+;; create-edge :: Map k v -> Route
+(defn- create-edge
   "Transform a route into a graph edge."
   [route]
   [(:name1 route)
@@ -32,7 +38,7 @@
   "Create a TTR graph from a map of edges."
   [map-data]
   (let [g (uber/multigraph)]
-    (uber/add-edges* g (map create-route map-data))))
+    (uber/add-edges* g (map create-edge map-data))))
 
 ;;-------------------------------
 ;; Route :: Map k v
@@ -52,6 +58,7 @@
 ;;-------------------------------
 (defn get-all-routes
   [g]
+  {:pre (s/valid? ::graph g)}
   (map (partial uber/edge-with-attrs g)
        (uber/edges g)))
 

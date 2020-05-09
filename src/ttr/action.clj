@@ -65,7 +65,7 @@
 
 ;;-------------------------------
 (defn get-available-routes
-  "Returns all routes in each direction as a sequence of vectors."
+  "Returns all routes in _each direction_ as a sequence of vectors."
   [state]
   (gr/get-routes (:map state) {:claimed-by nil}))
 
