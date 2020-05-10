@@ -3,10 +3,10 @@
 
 (ns ttr.graph
   (:gen-class)
-  (:require [ubergraph.core :as uber]
-            [ubergraph.alg :as alg]
+  (:require [clojure.spec.alpha :as s]
             [csv-map.core :as csv]
-            [clojure.spec.alpha :as s]))
+            [ubergraph.alg :as alg]
+            [ubergraph.core :as uber]))
 
 ;;-------------------------------
 ;; Utilities
@@ -17,7 +17,7 @@
 
 ;;-------------------------------
 ;; Definitions
-(s/def ::edge-attrs (s/keys :req-un [::length ::colour ::locos ::tunnel ::claimed-by]) )
+(s/def ::edge-attrs (s/keys :req-un [::length ::colour ::locos ::tunnel ::claimed-by]))
 (s/def ::route (s/cat :src string? :dest string? :attrs ::edge-attrs))
 (s/def ::routes (s/coll-of ::route))
 (s/def ::graph (s/keys :req-un [::node-map ::allow-parallel? ::undirected? ::attrs ::cached-hash]))
@@ -70,25 +70,19 @@
   (map (partial uber/edge-with-attrs g)
        (uber/find-edges g condition)))
 
-(defn- edge->query
-  "Convert an edge to a query for find-edge"
+(defn- route->query
+  "Convert an edge to a query for uber/find-edge"
   [e]
-  {:src (first e) :dest (second e) :colour (:colour (last e))})
+  {:src (first e) 
+   :dest (second e) 
+   :colour (:colour (last e))})
 
-; claimed? :: Graph -> Edge -> Boolean
-(defn claimed?
-  [g e]
-  (as-> e <>
-    (uber/find-edge g (edge->query <>))
-    (uber/attr g <> :claimed-by)))
-
-; take-edge :: Graph -> Edge -> Player -> Graph
-(defn claim-route
-  "Indicate an edge is taken by a player. This overwrites the existing value."
-  [g edge player]
-  {:pre (s/valid? ::edge edge)}
-  (let [e (uber/find-edge g (last edge))]
-    (uber/add-attr g e :claimed-by player)))
+(defn update-route
+  "Overwrite the value of an route attribute"
+  [g route attr value]
+  {:pre (s/valid? ::route route)}
+  (let [edge (uber/find-edge g (route->query route))]
+       (uber/set-attrs g edge {attr value})))
 
 ;;-------------------------------
 ;; best-path :: Graph -> String -> String -> Path

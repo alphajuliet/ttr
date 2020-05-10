@@ -3,9 +3,9 @@
 
 (ns ttr.state
   (:gen-class)
-  (:require [ttr.graph :as gr]
+  (:require [clojure.spec.alpha :as s]
             [csv-map.core :as csv]
-            [clojure.spec.alpha :as s]))
+            [ttr.graph :as gr]))
 
 ;;-------------------------------
 ;; Utilities

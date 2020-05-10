@@ -3,7 +3,7 @@
 
 (ns ttr.action
   (:gen-class)
-  (:require [ttr.state :as st ]
+  (:require [ttr.state :as st]
             [ttr.graph :as gr]
             [random-seed.core :as r]
             [clojure.spec.alpha :as s]))
@@ -69,13 +69,17 @@
   [state]
   (gr/get-routes (:map state) {:claimed-by nil}))
 
+(defn- route->query
+  "Convert an edge to a query for find-edge"
+  [e]
+  {:src (first e) :dest (second e) :colour (:colour (last e))})
+
 ;;-------------------------------
 (defn claim-route
   "Claim a route on the map. A route is specified as a map with a :src, :dest and :colour"
   [route player state]
-  [:pre [(contains? route :src)
-         (contains? route :dest)
-         (contains? route :colour)]]
-  (assoc state :map (gr/claim-edge (:map state) route player)))
+  (let [g (:map state)]
+    (assoc state :map (gr/update-route g route :claimed-by player))))
+
 
 ;; The End)
