@@ -5,6 +5,7 @@
   (:gen-class)
   (:require [ttr.state :as st]
             [ttr.graph :as gr]
+            [ttr.num-map :as num]
             [random-seed.core :as r]
             [clojure.spec.alpha :as s]))
 
@@ -20,7 +21,7 @@
   "Select a random card from a pile."
   [pile]
   (->> pile
-       (st/hash-enumerate)
+       (num/map-enumerate)
        (r/rand-nth)))
 
 ;;-------------------------------
@@ -36,7 +37,7 @@
 (defn- deal-to-5
   "Deal up to five cards to the table."
   [st _]
-  (if (< (st/hash-sum (:cards st)) 5)
+  (if (< (num/map-sum (:cards st)) 5)
     (deal-car st)
     ;else
     (reduced st)))
@@ -52,6 +53,50 @@
         s))))
 
 ;;-------------------------------
+(defn available-routes
+  "Returns all routes in _each direction_"
+  [state]
+  (gr/get-routes (:map state) {:claimed-by nil}))
+
+(defn- route->query
+  "Convert an edge to a query for find-edge"
+  [e]
+  {:src (first e) :dest (second e) :colour (:colour (last e))})
+
+
+;;-------------------------------
+
+(defn- f
+  "Pay cards to match"
+  [colour length locos cards]
+  (let [c (min (- length locos) (colour cards))
+        l (min (- length c) (:loco cards))]
+    (num/map-sub cards {colour c :loco l})))
+
+(defn- pay-for-route
+  "Pay for the route in cards and locos"
+  [route player state]
+  (let [{:keys [length colour locos tunnel]} (last route)
+        my-colour (count (get-in state [:player :cards colour]))
+        my-locos (count (get-in state [:player :cards :locos]))]
+    (if (>= length (+ my-colour my-locos))
+      (as-> state st
+           (update-in st [:player player :cards colour] (partial - my-colour)))
+      ;else
+      state)))
+
+
+;;-------------------------------
+;; These are the high-level actions for a player
+
+(defn claim-route
+  "Claim a route on the map. A route is specified as a map with a :src, :dest and :colour"
+  [route player state]
+  (let [g (:map state)]
+    (as-> state st
+      (pay-for-route route player st)
+      (assoc st :map (gr/update-route g route :claimed-by player)))))
+
 (defn take-card
   "A player takes a card from the table into their hand, and deal another card to the table. There is no limit to the number of hand cards."
   [player card state]
@@ -63,23 +108,12 @@
       (update-in [:player player :cards card] inc)
       (deal-table)))
 
-;;-------------------------------
-(defn get-available-routes
-  "Returns all routes in _each direction_ as a sequence of vectors."
-  [state]
-  (gr/get-routes (:map state) {:claimed-by nil}))
+(defn build-station
+  "Build a train station in a city"
+  [city player state])
 
-(defn- route->query
-  "Convert an edge to a query for find-edge"
-  [e]
-  {:src (first e) :dest (second e) :colour (:colour (last e))})
-
-;;-------------------------------
-(defn claim-route
-  "Claim a route on the map. A route is specified as a map with a :src, :dest and :colour"
-  [route player state]
-  (let [g (:map state)]
-    (assoc state :map (gr/update-route g route :claimed-by player))))
-
+(defn take-ticket
+  "Take a new ticket"
+  [player state])
 
 ;; The End)

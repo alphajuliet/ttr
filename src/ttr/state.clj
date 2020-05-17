@@ -5,22 +5,11 @@
   (:gen-class)
   (:require [clojure.spec.alpha :as s]
             [csv-map.core :as csv]
-            [ttr.graph :as gr]))
+            [ttr.graph :as gr]
+            [ttr.num-map :as num]))
 
 ;;-------------------------------
 ;; Utilities
-
-(defn hash-sum
-  "Sum the values of the numeric hash."
-  [h]
-  (apply + (vals h)))
-
-(defn hash-enumerate
-  "For each pair [k v] in a numeric hash, add v copies of k, and concatenate into a single list."
-  [h]
-  (reduce-kv
-   (fn [m k v]
-     (into m (repeat v k))) [] h))
 
 ;; Ticket :: Map k v
 (s/def ::ticket (s/keys :req [string? string? int?]))
