@@ -14,10 +14,7 @@
   [h]
   (apply + (vals h)))
 
-(defn map-union
-  "Combine two numeric mapes with a combining function for values with matching keys"
-  [f h1 h2]
-  (merge-with f h1 h2))
+(def map-union merge-with)
 
 (defn map-add
   "Add matching values from two numeric mapes."

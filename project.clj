@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [ubergraph "0.8.2"]
                  [csv-map "0.1.2"]
+                 [funcool/cats "2.3.6"]
                  [random-seed "1.0.0"]]
   :main ^:skip-aot ttr.core
   :target-path "target/%s"

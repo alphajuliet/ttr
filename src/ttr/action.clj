@@ -7,6 +7,9 @@
             [ttr.graph :as gr]
             [ttr.num-map :as num]
             [random-seed.core :as r]
+            [cats.core :as m]
+            [cats.builtin]
+            [cats.monad.maybe :as maybe]
             [clojure.spec.alpha :as s]))
 
 ;;-------------------------------
@@ -63,34 +66,52 @@
   [e]
   {:src (first e) :dest (second e) :colour (:colour (last e))})
 
-
 ;;-------------------------------
+;; maybe-map :: Map k v -> Maybe (Map k v)
+(defn- maybe-map
+  "Wrap a map with a `Maybe` monad. If any of the values are nil, return `Nothing`, otherwise `Just m`"
+  [m]
+  (if (not-any? nil? (vals m))
+    (maybe/just m)
+    (maybe/nothing)))
 
-(defn- f
-  "Pay cards to match"
+(defn pay-cards
+  "For a given `colour`, `length`, and number of `locos`, work out what player `cards` to pay with."
   [colour length locos cards]
-  (let [c (min (- length locos) (colour cards))
-        l (min (- length c) (:loco cards))]
-    (num/map-sub cards {colour c :loco l})))
+  {:pre [(s/valid? ::st/route-colour colour)
+         (s/valid? pos-int? length)
+         (s/valid? int? locos)
+         (s/valid? ::st/cards cards)]}
+  (let [n (- length locos)
+        a (min (:loco cards) locos) ; number of mandatory locos to play
+        b (min (colour cards) n) ; number of coloured cars to play
+        c (min (- (:loco cards) a) (- n b))] ; number of additional locos to play
+    (if (or (< a locos) 
+            (< c (- length a b)))
+      nil
+      ;else
+      (-> cards
+          (num/map-sub {:loco a})
+          (num/map-sub {colour b})
+          (num/map-sub {:loco c})))))
 
-(defn- pay-for-route
-  "Pay for the route in cards and locos"
+(defn pay-for-route
+  "Pay for the route in cards and locos. For uncoloured routes, choose a colour to pay."
   [route player state]
   (let [{:keys [length colour locos tunnel]} (last route)
         my-colour (count (get-in state [:player :cards colour]))
         my-locos (count (get-in state [:player :cards :locos]))]
     (if (>= length (+ my-colour my-locos))
       (as-> state st
-           (update-in st [:player player :cards colour] (partial - my-colour)))
+        (update-in st [:player player :cards colour] (partial - my-colour)))
       ;else
       state)))
-
 
 ;;-------------------------------
 ;; These are the high-level actions for a player
 
 (defn claim-route
-  "Claim a route on the map. A route is specified as a map with a :src, :dest and :colour"
+  "Claim and pay for a route on the map. A route is specified as a map with keys `:src`, `:dest` and `:colour`"
   [route player state]
   (let [g (:map state)]
     (as-> state st
