@@ -7,9 +7,7 @@
             [ttr.graph :as gr]
             [ttr.num-map :as num]
             [random-seed.core :as r]
-            [cats.core :as m]
             [cats.builtin]
-            [cats.monad.maybe :as maybe]
             [clojure.spec.alpha :as s]))
 
 ;;-------------------------------
@@ -59,16 +57,17 @@
 (defn available-routes
   "Returns all routes in _each direction_"
   [state]
+  {:pre (s/valid? ::st/state state)}
   (gr/get-routes (:map state) {:claimed-by nil}))
 
-(defn- route->query
+#_(defn- route->query
   "Convert an edge to a query for find-edge"
   [e]
   {:src (first e) :dest (second e) :colour (:colour (last e))})
 
 ;;-------------------------------
 ;; maybe-map :: Map k v -> Maybe (Map k v)
-(defn- maybe-map
+#_(defn- maybe-map
   "Wrap a map with a `Maybe` monad. If any of the values are nil, return `Nothing`, otherwise `Just m`"
   [m]
   (if (not-any? nil? (vals m))
@@ -96,14 +95,16 @@
           (num/map-sub {:loco c})))))
 
 (defn pay-for-route
-  "Pay for the route in cards and locos. For uncoloured routes, choose a colour to pay."
+  "Pay for the route in cards and locos. If payment is not possible then return nil."
   ;;@@TODO Implement tunnels
   [route player state]
-  (let [{:keys [length colour locos tunnel]} (last route)
+  #_{:pre [(s/valid? ::st/state state)]}
+  (let [{:keys [length colour locos]} (last route)
         curr-hand (get-in state [:player player :cards])
         new-hand (pay-cards colour length locos curr-hand)]
     (if (nil? new-hand)
-      state
+      ;state
+      nil
       ;else
       (assoc-in state [:player player :cards] new-hand))))
 
@@ -111,12 +112,17 @@
 ;; These are the high-level actions for a player
 
 (defn claim-route
-  "Claim and pay for a route on the map. A route is specified as a map with keys `:src`, `:dest` and `:colour`"
+  "Claim and pay for a route on the map. A route is specified as a map with keys `:src`, `:dest` and `:colour`."
   [route player state]
-  (let [g (:map state)]
-    (as-> state st
-      (pay-for-route route player st)
-      (assoc st :map (gr/update-route g route :claimed-by player)))))
+  {:pre [#_(s/valid? ::st/route route)
+         (s/valid? int? player)
+         (s/valid? ::st/state state)]}
+  (let [g (:map state)
+        s (pay-for-route route player state)]
+    (if (nil? s)
+      nil
+      ;else
+      (assoc s :map (gr/update-route g route :claimed-by player)))))
 
 (defn take-card
   "A player takes a card from the table into their hand, and deal another card to the table. There is no limit to the number of hand cards."
@@ -129,11 +135,11 @@
       (update-in [:player player :cards card] inc)
       (deal-table)))
 
-(defn build-station
+#_(defn build-station
   "Build a train station in a city"
   [city player state])
 
-(defn take-ticket
+#_(defn take-ticket
   "Take a new ticket"
   [player state])
 
