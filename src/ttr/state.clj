@@ -5,14 +5,14 @@
   (:gen-class)
   (:require [clojure.spec.alpha :as s]
             [csv-map.core :as csv]
-            [ttr.graph :as gr]
-            [ttr.num-map :as num]))
+            [spec-dict :refer [dict]]
+            [ttr.graph :as gr]))
 
 ;;-------------------------------
 ;; Utilities
 
 ;; Ticket :: Map k v
-(s/def ::ticket (s/keys :req [string? string? int?]))
+(s/def ::ticket (dict {:city1 string? :city2 string? :points pos-int?}))
 (s/def ::tickets (s/coll-of ::ticket))
 
 ;; read-tickets :: String -> List Ticket
@@ -39,14 +39,16 @@
 
 ;; State :: Map k v
 ;; init-state :: State
-(s/def ::cars int?)
-(s/def ::score int?)
-(s/def ::plyr (s/keys :req-un [::cars ::cards ::tickets ::score]))
+(s/def ::player (dict {:cars int?
+                       :cards ::cards
+                       :tickets ::tickets
+                       :score int?}))
 
-(s/def ::map (s/keys))
-(s/def ::deck ::cards)
-(s/def ::player (s/coll-of ::plyr))
-(s/def ::state (s/keys :req-un [::map ::deck ::cards ::tickets ::player]))
+(s/def ::state (dict {:map (s/keys)
+                      :deck ::cards
+                      :cards ::cards
+                      :tickets ::tickets
+                      :player (s/coll-of ::player)}))
 
 (defn empty-state
   "Define the empty state:
