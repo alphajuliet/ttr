@@ -32,6 +32,13 @@
 (def colours [:white :red :orange :blue :green :black :pink :yellow :loco])
 
 (s/def ::route-colour #{:white :red :orange :blue :green :black :pink :yellow :none})
+(s/def ::route-attrs (dict {:length pos-int?
+                            :colour ::route-colour
+                            :locos int?
+                            :tunnel int?}))
+(s/def ::route (s/cat :src string?
+                      :dest string?
+                      :attrs ::route-attrs))
 
 (s/def ::cards (s/map-of ::colour int?))
 (def zero-train-cards (zipmap colours (repeat 9 0)))

@@ -114,7 +114,7 @@
 (defn claim-route
   "Claim and pay for a route on the map. A route is specified as a map with keys `:src`, `:dest` and `:colour`."
   [route player state]
-  {:pre [#_(s/valid? ::st/route route)
+  {:pre [(s/valid? ::st/route route)
          (s/valid? int? player)
          (s/valid? ::st/state state)]}
   (let [g (:map state)
