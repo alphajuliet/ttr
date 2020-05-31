@@ -86,7 +86,7 @@
         a (min (:loco cards) locos) ; number of mandatory locos to play
         b (min (colour cards) n) ; number of coloured cars to play
         c (min (- (:loco cards) a) (- n b))] ; number of additional locos to play
-    (if (or (< a locos) 
+    (if (or (< a locos)
             (< c (- length a b)))
       nil
       ;else
@@ -97,15 +97,15 @@
 
 (defn pay-for-route
   "Pay for the route in cards and locos. For uncoloured routes, choose a colour to pay."
+  ;;@@TODO Implement tunnels
   [route player state]
   (let [{:keys [length colour locos tunnel]} (last route)
-        my-colour (count (get-in state [:player :cards colour]))
-        my-locos (count (get-in state [:player :cards :locos]))]
-    (if (>= length (+ my-colour my-locos))
-      (as-> state st
-        (update-in st [:player player :cards colour] (partial - my-colour)))
+        curr-hand (get-in state [:player player :cards])
+        new-hand (pay-cards colour length locos curr-hand)]
+    (if (nil? new-hand)
+      state
       ;else
-      state)))
+      (assoc-in state [:player player :cards] new-hand))))
 
 ;;-------------------------------
 ;; These are the high-level actions for a player

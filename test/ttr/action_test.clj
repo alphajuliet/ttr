@@ -1,9 +1,6 @@
 (ns ttr.action-test
   (:require [clojure.test :refer [deftest is testing]]
             [ttr.num-map :as num]
-            [cats.core :as m]
-            [cats.monad.maybe :as maybe]
-            [ttr.graph :as gr]
             [ttr.state :as st]
             [ttr.action :as act]))
 
@@ -32,6 +29,7 @@
     (let [s0 (st/empty-state 2)
           r  (first (act/available-routes s0))
           s1 (act/claim-route r 1 s0)]
+      (is (= 202 (count (act/available-routes s0))))
       (is (= 200 (count (act/available-routes s1)))))))
 
 (deftest test-pay-cards
@@ -48,10 +46,10 @@
 (deftest test-pay-route
   (testing "Pay for a route"
     #_(let [s0 (st/empty-state 2)
-          s1 (assoc-in s0 [:player 0 :cards] 
-                       {:orange 1 :white 2 :yellow 3 :green 4 :locos 1})
-          r-white (first (gr/get-routes (:map s0) {:src "Paris" :dest "Frankfurt" :colour :white}))
-          s2 (act/claim-route r-white 0 s1)]
-      (is (= 0 (get-in s2 [:player 0 :cards :white]))))))
+            s1 (assoc-in s0 [:player 0 :cards]
+                         {:orange 1 :white 2 :yellow 3 :green 4 :locos 1})
+            r-white (first (gr/get-routes (:map s0) {:src "Paris" :dest "Frankfurt" :colour :white}))
+            s2 (act/claim-route r-white 0 s1)]
+        (is (= 0 (get-in s2 [:player 0 :cards :white]))))))
 
 ;; The End
