@@ -25,6 +25,12 @@
       (is (= 1 (get-in s2 [:player 0 :cards c])))
       (is (= 5 (num/map-sum (:cards s2)))))))
 
+(deftest test-take-random-card
+  (testing "Take a random card from the deck."
+    (let [s0 (st/empty-state 2)
+          s1 (act/take-random-card 0 s0)]
+      (is (= 1 (num/map-sum (get-in s1 [:player 0 :cards])))))))
+
 (deftest test-pay-cards
   (testing "Pay with cards."
     (let [cards {:red 3 :white 2 :loco 2}]
@@ -42,9 +48,14 @@
           s1 (update-in s0 [:player 0 :cards]
                        (partial num/map-add {:white 2 :blue 3 :loco 1}))
           r  (first (act/available-routes s0))
-          s2 (act/claim-route r 0 s1)]
-      (is (nil? (act/claim-route r 0 s0)))
+          r-uncoloured (first (gr/get-routes (:map s1) {:colour :none}))
+          s2 (act/claim-route r :none 0 s1)
+          s3 (act/claim-route r-uncoloured :blue 0 s1)]
+      (is (nil? (act/claim-route r :none 0 s0)))
       (is (= 202 (count (act/available-routes s0))))
-      (is (= 200 (count (act/available-routes s2)))))))
+      (is (= 200 (count (act/available-routes s2))))
+      
+      (is (nil? (act/claim-route r-uncoloured :yellow 0 s1)))
+      (is (= 200 (count (act/available-routes s3)))))))
 
 ;; The End
