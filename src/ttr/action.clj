@@ -56,6 +56,7 @@
         s))))
 
 ;;-------------------------------
+;; available-routes :: State -> Seq Route
 (defn available-routes
   "Returns all routes in _each direction_"
   [state]
@@ -68,6 +69,7 @@
     {:src (first e) :dest (second e) :colour (:colour (last e))})
 
 ;;-------------------------------
+;; pay-cards :: Colour -> Int -> Int -> Seq Card -> Seq Card
 (defn pay-cards
   "For a given `colour`, `length`, and number of `locos`, work out what
   player `cards` to pay with."
@@ -89,6 +91,7 @@
           (num/map-sub {colour b})
           (num/map-sub {:loco c})))))
 
+;; pay-for-route :: Route -> Colour -> Player -> State -> State
 (defn pay-for-route
   "Pay for the route in cards and locos. If payment is not possible then return
   nil. If a route has a :colour of :none, then pay with `chosen-colour`."
@@ -109,6 +112,7 @@
 ;;-------------------------------
 ;; These are the high-level actions for a player
 
+;; claim-route :: Route -> Colour -> Player -> State -> State
 (defn claim-route
   "Claim and pay for a route on the map. A route is specified as a map
   with keys `:src`, `:dest` and `:colour`. If the route has :colour of
@@ -124,6 +128,7 @@
       ;else
       (assoc s :map (gr/update-route g route :claimed-by player)))))
 
+;; take-card :: Player -> Card -> State -> State
 (defn take-card
   "A player takes a card from the table into their hand, and deal another
   card to the table. There is no limit to the number of hand cards."
@@ -136,6 +141,7 @@
       (update-in [:player player :cards card] inc)
       (deal-table)))
 
+;; take-random-card :: Player -> State -> State
 (defn take-random-card
   "Take a card from the deck into their hand."
   [player state]
@@ -148,6 +154,7 @@
     "Build a train station in a city"
     [city player state])
 
+;; take-ticket :: Player -> Ticket -> State -> State
 (defn take-ticket
   "Take a new ticket from the pile into a player's hand."
   [player ticket state]
@@ -155,4 +162,10 @@
      (update-in <> [:tickets] #(remove #{ticket} %))
      (update-in <> [:player player :tickets] #(cons ticket %))))
 
-;; The End)
+;; take-random-ticket :: Player -> State -> State
+(defn take-random-ticket
+  "Take a random ticket from the pile."
+  [player state]
+  (take-ticket player (rand-nth (:tickets state)) state))
+
+;; The End

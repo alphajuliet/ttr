@@ -20,7 +20,7 @@
        (act/deal-table)))
 
 ;;-------------------------------
-;; take-card-options :: Player -> State -> [Action]
+;; take-card-options :: Player -> State -> Seq Action
 (defn take-card-options
   "Enumerate all the actions for a player to take cards."
   [player state]
@@ -35,6 +35,7 @@
     [r]
     (into (last r) {:src (first r), :dest (second r)}))
 
+;; get-eligible-routes :: Player -> State -> Seq Route
 (defn- get-eligible-routes
   "Get all the eligible routes based on the number of each colour card in the hand."
   [player state]
@@ -59,7 +60,7 @@
   (for [r routes]
     `(act/claim-route  ~player :none ~r)))
 
-;; claim-route-options :: Player -> State -> [Action]
+;; claim-route-options :: Player -> State -> Seq Action
 (defn claim-route-options
   "Enumerate all the claimable routes based on the hand cards and what's
   not yet claimed."
@@ -71,7 +72,7 @@
    (routes->actions player)))
 
 ;;-------------------------------
-;; available-actions :: Player -> State -> [Action]
+;; available-actions :: Player -> State -> Seq Action
 (defn available-actions
   "Return all the available actions, given a player and a current state."
   [player state]
