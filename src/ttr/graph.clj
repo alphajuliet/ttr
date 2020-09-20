@@ -4,12 +4,14 @@
 (ns ttr.graph
   (:gen-class)
   (:require [clojure.spec.alpha :as s]
+            [spec-dict :refer [dict]]
             [csv-map.core :as csv]
             [ubergraph.alg :as alg]
             [ubergraph.core :as uber]))
 
 ;;-------------------------------
 ;; Utilities
+
 (defn boolean->Integer
   [b]
   {:pre (boolean? b)}
@@ -17,10 +19,14 @@
 
 ;;-------------------------------
 ;; Definitions
+
 (s/def ::edge-attrs (s/keys :req-un [::length ::colour ::locos ::tunnel ::claimed-by]))
-(s/def ::route (s/cat :src string? :dest string? :attrs ::edge-attrs))
+(s/def ::route (s/cat :src string?
+                      :dest string?
+                      :attrs ::edge-attrs))
 (s/def ::routes (s/coll-of ::route))
-(s/def ::graph (s/keys :req-un [::node-map ::allow-parallel? ::undirected? ::attrs ::cached-hash]))
+(s/def ::graph (s/keys :req-un [::node-map ::allow-parallel? ::undirected?
+                                ::attrs ::cached-hash]))
 
 ;; create-edge :: Map k v -> Route
 (defn- create-edge
@@ -31,7 +37,7 @@
    {:length (Integer. (:length route))
     :colour (keyword (:colour route))
     :locos (Integer. (:locos route))
-    :tunnel (if (= "TRUE" (:istunnel route)) 1 0)
+    :tunnel (if (= "TRUE" (:istunnel route)) true false)
     :claimed-by nil}])
 
 ;; create-graph :: String -> Graph

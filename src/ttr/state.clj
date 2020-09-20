@@ -9,11 +9,38 @@
             [ttr.graph :as gr]))
 
 ;;-------------------------------
-;; Utilities
+;; Specs
 
-;; Ticket :: Map k v
 (s/def ::ticket (dict {:city1 string? :city2 string? :points pos-int?}))
 (s/def ::tickets (s/coll-of ::ticket))
+(s/def ::colour #{:white :red :orange :blue :green :black :pink :yellow :loco})
+(s/def ::cards (s/map-of ::colour nat-int?))
+
+(s/def ::route-colour #{:white :red :orange :blue :green :black :pink :yellow :none})
+
+(s/def ::route-attrs (s/and (dict {:length pos-int?
+                                   :colour ::route-colour
+                                   :locos nat-int?
+                                   :tunnel boolean?}) #(< (:locos %) (:length %))))
+
+(s/def ::route (s/cat :src string?
+                      :dest string?
+                      :attrs ::route-attrs))
+
+
+(s/def ::player (dict {:cars nat-int?
+                       :cards ::cards
+                       :tickets ::tickets
+                       :score nat-int?}))
+
+(s/def ::state (dict {:map (s/keys)
+                      :deck ::cards
+                      :cards ::cards
+                      :tickets ::tickets
+                      :player (s/coll-of ::player)}))
+
+;;-------------------------------
+;; Utilities
 
 ;; read-tickets :: String -> List Ticket
 (defn read-tickets
@@ -22,40 +49,23 @@
    (read-tickets "data/ttr-europe-tickets.csv"))
 
   ([tickets-file]
-   {:post (s/valid? ::tickets %)}
+   {:post [(s/valid? ::tickets %)]}
+
    (as-> tickets-file <>
      (slurp <>)
      (csv/parse-csv <> :key :keyword)
      (map (fn [e] (update e :points #(Integer. %))) <>))))
 
-(s/def ::colour #{:white :red :orange :blue :green :black :pink :yellow :loco})
+;;-------------------------------
+;; Definitions
+
 (def colours [:white :red :orange :blue :green :black :pink :yellow :loco])
-
-(s/def ::route-colour #{:white :red :orange :blue :green :black :pink :yellow :none})
-(s/def ::route-attrs (dict {:length pos-int?
-                            :colour ::route-colour
-                            :locos int?
-                            :tunnel int?}))
-(s/def ::route (s/cat :src string?
-                      :dest string?
-                      :attrs ::route-attrs))
-
-(s/def ::cards (s/map-of ::colour int?))
 (def zero-train-cards (zipmap colours (repeat 9 0)))
 (def all-train-cards (zipmap colours [12 12 12 12 12 12 12 12 14]))
 
+;;-------------------------------
 ;; State :: Map k v
 ;; init-state :: State
-(s/def ::player (dict {:cars int?
-                       :cards ::cards
-                       :tickets ::tickets
-                       :score int?}))
-
-(s/def ::state (dict {:map (s/keys)
-                      :deck ::cards
-                      :cards ::cards
-                      :tickets ::tickets
-                      :player (s/coll-of ::player)}))
 
 (defn empty-state
   "Define the empty state:
@@ -68,7 +78,7 @@
      - Tickets
      - Score"
   [nplayers]
-  {:pre [(>= nplayers 2)]}
+  {:pre [(<= 2 nplayers 5)]}
 
   {:map (gr/initial-map)
    :deck all-train-cards
