@@ -52,14 +52,17 @@
 
 (defn- routes->actions
   "Turn the routes into claim-route actions. 
-   Note that the chosen-colour for all routes is :none. A policy needs to be invoked by the consumer on the resulting actions to override this for uncoloured routes."
+  Note that the chosen-colour for all routes is :none. A policy needs to
+  be invoked by the consumer on the resulting actions to override this for
+  uncoloured routes."
   [player routes]
   (for [r routes]
     `(act/claim-route  ~player :none ~r)))
 
 ;; claim-route-options :: Player -> State -> [Action]
 (defn claim-route-options
-  "Enumerate all the claimable routes based on the hand cards and what's not yet claimed."
+  "Enumerate all the claimable routes based on the hand cards and what's
+  not yet claimed."
   [player state]
   (->> state
    (get-eligible-routes player)

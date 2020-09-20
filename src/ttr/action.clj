@@ -45,7 +45,9 @@
 
 ;; deal-table :: State -> State
 (defn deal-table
-  "Deal random train car cards from the deck to the table until there are five. If there are more than three locos, discard all the table cards, and re-draw new cards."
+  "Deal random train car cards from the deck to the table until there
+  are five. If there are more than three locos, discard all the table
+  cards, and re-draw new cards."
   [state]
   (loop []
     (let [s (reduce deal-to-5 state (range 5))]
@@ -57,7 +59,7 @@
 (defn available-routes
   "Returns all routes in _each direction_"
   [state]
-  {:pre (s/valid? ::st/state state)}
+  {:pre [(s/valid? ::st/state state)]}
   (gr/get-routes (:map state) {:claimed-by nil}))
 
 #_(defn- route->query
@@ -67,7 +69,8 @@
 
 ;;-------------------------------
 (defn pay-cards
-  "For a given `colour`, `length`, and number of `locos`, work out what player `cards` to pay with."
+  "For a given `colour`, `length`, and number of `locos`, work out what
+  player `cards` to pay with."
   [colour length locos cards]
   {:pre [(s/valid? ::st/colour colour)
          (s/valid? pos-int? length)
@@ -87,8 +90,8 @@
           (num/map-sub {:loco c})))))
 
 (defn pay-for-route
-  "Pay for the route in cards and locos. If payment is not possible then return nil. If a route has
-   a :colour of :none, then pay with `chosen-colour`."
+  "Pay for the route in cards and locos. If payment is not possible then return
+  nil. If a route has a :colour of :none, then pay with `chosen-colour`."
   ;;@@TODO Implement tunnels
   [route chosen-colour player state]
   #_{:pre [(s/valid? ::st/state state)]}
@@ -107,7 +110,9 @@
 ;; These are the high-level actions for a player
 
 (defn claim-route
-  "Claim and pay for a route on the map. A route is specified as a map with keys `:src`, `:dest` and `:colour`. If the route has :colour of :none, then pay with `chosen-colour`."
+  "Claim and pay for a route on the map. A route is specified as a map
+  with keys `:src`, `:dest` and `:colour`. If the route has :colour of
+  :none, then pay with `chosen-colour`."
   [route chosen-colour player state]
   {:pre [(s/valid? ::st/route route)
          (s/valid? int? player)
@@ -120,10 +125,11 @@
       (assoc s :map (gr/update-route g route :claimed-by player)))))
 
 (defn take-card
-  "A player takes a card from the table into their hand, and deal another card to the table. There is no limit to the number of hand cards."
+  "A player takes a card from the table into their hand, and deal another
+  card to the table. There is no limit to the number of hand cards."
   [player card state]
   ; Assert that the card is available
-  {:pre (>= (get-in state [:cards card]) 1)}
+  {:pre [(>= (get-in state [:cards card]) 1)]}
 
   (-> state
       (update-in [:cards card] dec)
@@ -142,8 +148,11 @@
     "Build a train station in a city"
     [city player state])
 
-#_(defn take-ticket
-    "Take a new ticket"
-    [player state])
+(defn take-ticket
+  "Take a new ticket from the pile into a player's hand."
+  [player ticket state]
+  (as-> state <>
+     (update-in <> [:tickets] #(remove #{ticket} %))
+     (update-in <> [:player player :tickets] #(cons ticket %))))
 
 ;; The End)

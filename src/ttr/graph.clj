@@ -14,7 +14,7 @@
 
 (defn boolean->Integer
   [b]
-  {:pre (boolean? b)}
+  {:pre [(boolean? b)]}
   (if b 1 0))
 
 ;;-------------------------------
@@ -66,7 +66,7 @@
 (defn get-all-routes
   "Get all routes in the graph"
   [g]
-  {:pre (s/valid? ::graph g)}
+  {:pre [(s/valid? ::graph g)]}
   (map (partial uber/edge-with-attrs g)
        (uber/edges g)))
 
@@ -86,7 +86,7 @@
 (defn update-route
   "Overwrite the value of an route attribute"
   [g route attr value]
-  {:pre (s/valid? ::route route)}
+  {:pre [(s/valid? ::route route)]}
   (let [edge (uber/find-edge g (route->query route))]
        (uber/set-attrs g edge {attr value})))
 

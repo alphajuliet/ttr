@@ -31,6 +31,14 @@
           s1 (act/take-random-card 0 s0)]
       (is (= 1 (num/map-sum (get-in s1 [:player 0 :cards])))))))
 
+(deftest test-take-card
+  (testing "Take a ticket from the pile."
+    (let [s0 (st/empty-state 2)
+          t (rand-nth (:tickets s0))
+          s1 (act/take-ticket 0 t s0)]
+      (is (= 45 (count (:tickets s1))))
+      (is (= 1 (count (get-in s1 [:player 0 :tickets])))))))
+
 (deftest test-pay-cards
   (testing "Pay with cards."
     (let [cards {:red 3 :white 2 :loco 2}]
@@ -54,7 +62,7 @@
       (is (nil? (act/claim-route r :none 0 s0)))
       (is (= 202 (count (act/available-routes s0))))
       (is (= 200 (count (act/available-routes s2))))
-      
+
       (is (nil? (act/claim-route r-uncoloured :yellow 0 s1)))
       (is (= 200 (count (act/available-routes s3)))))))
 

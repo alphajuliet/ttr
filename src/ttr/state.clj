@@ -92,9 +92,9 @@
 (defn pprint-state
   "Pretty print the state."
   [s]
-  {:pre (s/valid? ::state s)}
+  {:pre [(s/valid? ::state s)]}
   (println "Deck:" (reduce + 0 (vals (:deck s))))
-  (println "Cards:" (:cards s))
+  (println "Table:" (:cards s))
   (println "Tickets:" (count (:tickets s)))
   (println "Players:")
   (map #(println %) (:player s)))
