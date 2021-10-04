@@ -34,6 +34,7 @@
                        :score nat-int?}))
 
 (s/def ::state (dict {:map (s/keys)
+                      :nplayers nat-int?
                       :deck ::cards
                       :cards ::cards
                       :tickets ::tickets
@@ -81,6 +82,7 @@
   {:pre [(<= 2 nplayers 5)]}
 
   {:map (gr/initial-map)
+   :nplayers nplayers
    :deck all-train-cards
    :cards zero-train-cards
    :tickets (read-tickets)
