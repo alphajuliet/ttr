@@ -63,11 +63,6 @@
   {:pre [(s/valid? ::st/state state)]}
   (gr/get-routes (:map state) {:claimed-by nil}))
 
-#_(defn- route->query
-    "Convert an edge to a query for find-edge"
-    [e]
-    {:src (first e) :dest (second e) :colour (:colour (last e))})
-
 ;;-------------------------------
 ;; pay-cards :: Colour -> Int -> Int -> Seq Card -> Seq Card
 (defn pay-cards
@@ -98,7 +93,7 @@
   ;;@@TODO Implement tunnels
   [route chosen-colour player state]
   #_{:pre [(s/valid? ::st/state state)]}
-  (let [{:keys [length colour locos]} (last route)
+  (let [{:keys [length colour locos]} (:attrs route)
         curr-hand (get-in state [:player player :cards])
         new-hand (if (= colour :none)
                    (pay-cards chosen-colour length locos curr-hand)
@@ -141,15 +136,6 @@
       (update-in [:player player :cards card] inc)
       (deal-table)))
 
-;; take-random-card :: Player -> State -> State
-(defn take-random-card
-  "Take a card from the deck into their hand."
-  [player state]
-  (let [c (random-card (:deck state))]
-    (-> state
-        (update-in [:deck c] dec-to-0)
-        (update-in [:player player :cards c] inc))))
-
 #_(defn build-station
     "Build a train station in a city"
     [city player state])
@@ -162,10 +148,14 @@
      (update-in <> [:tickets] #(remove #{ticket} %))
      (update-in <> [:player player :tickets] #(cons ticket %))))
 
-;; take-random-ticket :: Player -> State -> State
-(defn take-random-ticket
-  "Take a random ticket from the pile."
-  [player state]
-  (take-ticket player (rand-nth (:tickets state)) state))
+;;-------------------------------
+;; end-of-game :: State -> Boolean
+(defn end-of-game?
+  "Determine if the game has ended by seeing if any players has two cars or fewer."
+  [state]
+  (some #(<= % 2)
+        (map #(get-in state [:player % :cars])
+             (range (:nplayers state)))))
+
 
 ;; The End

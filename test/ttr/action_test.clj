@@ -25,7 +25,7 @@
       (is (= 1 (get-in s2 [:player 0 :cards c])))
       (is (= 5 (num/map-sum (:cards s2)))))))
 
-(deftest test-take-random-card
+#_(deftest test-take-random-card
   (testing "Take a random card from the deck."
     (let [s0 (st/empty-state 2)
           s1 (act/take-random-card 0 s0)]
